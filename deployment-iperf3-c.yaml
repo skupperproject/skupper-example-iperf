@@ -72,7 +72,7 @@ spec:
           value: "amqp:iperf3-server-a=>tcp:5201,tcp:5201=>amqp:iperf3-server-a"
         - name: ICPROXY_POD_SELECTOR
           value: "application=iperf3-server-a"
-        image: quay.io/gordons/icproxy
+        image: quay.io/skupper/icproxy
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: connect
@@ -116,7 +116,7 @@ spec:
           value: "amqp:iperf3-server-b=>tcp:5201,tcp:5201=>amqp:iperf3-server-b"
         - name: ICPROXY_POD_SELECTOR
           value: "application=iperf3-server-b"
-        image: quay.io/gordons/icproxy
+        image: quay.io/skupper/icproxy
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: connect
@@ -159,7 +159,7 @@ spec:
           value: "amqp:iperf3-server-c=>tcp:5201,tcp:5201=>amqp:iperf3-server-c"
         - name: ICPROXY_POD_SELECTOR
           value: "application=iperf3-server-c"
-        image: quay.io/gordons/icproxy
+        image: quay.io/skupper/icproxy
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: connect
