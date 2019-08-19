@@ -1,0 +1,183 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: myrouter
+  labels:
+    application: messaging
+type: Opaque
+stringData:
+  connect.json: |-
+    {
+        "scheme": "amqp",
+        "host": "messaging"
+    }
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: icproxy
+---
+apiVersion: v1
+kind: RoleBinding
+metadata:
+  name: icproxy-view
+subjects:
+- kind: ServiceAccount
+  name: icproxy
+roleRef:
+  kind: Role
+  name: view
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata: 
+  name: iperf3-server-b
+spec:
+  replicas: 1
+  selectors:
+    matchLabels:
+      application: iperf3-server-b
+  template:
+    metadata:
+      labels:
+        application: iperf3-server-b
+    spec:
+      containers: 
+        - image: quay.io/ajssmith/iperf3
+          name: iperf3-server
+          command:
+            - iperf3
+            - "-s"
+          imagePullPolicy: IfNotPresent
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: iperf3-server-a-proxy
+spec:
+  selector:
+    matchLabels:
+      application: iperf3-server-a-proxy
+  template:
+    metadata:
+      labels:
+        application: iperf3-server-a-proxy
+    spec:
+      serviceAccountName: icproxy
+      containers:
+      - name: proxy
+        env:
+        - name: ICPROXY_CONFIG
+          value: "amqp:iperf3-server-a=>tcp:5201,tcp:5201=>amqp:iperf3-server-a"
+        - name: ICPROXY_POD_SELECTOR
+          value: "application=iperf3-server-a"
+        image: quay.io/gordons/icproxy
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: connect
+          mountPath: "/etc/messaging/"
+          readOnly: true
+      volumes:
+      - name: connect
+        secret:
+          secretName: myrouter
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iperf3-svc-a
+spec:
+  ports:
+  - port: 5201
+    targetPort: 5201
+  selector:
+    application: iperf3-server-a-proxy
+---
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: iperf3-server-b-proxy
+spec:
+  selector:
+    matchLabels:
+      application: iperf3-server-b-proxy
+  template:
+    metadata:
+      labels:
+        application: iperf3-server-b-proxy
+    spec:
+      serviceAccountName: icproxy
+      containers:
+      - name: proxy
+        env:
+        - name: ICPROXY_CONFIG
+          value: "amqp:iperf3-server-b=>tcp:5201,tcp:5201=>amqp:iperf3-server-b"
+        - name: ICPROXY_POD_SELECTOR
+          value: "application=iperf3-server-b"
+        image: quay.io/gordons/icproxy
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: connect
+          mountPath: "/etc/messaging/"
+          readOnly: true
+      volumes:
+      - name: connect
+        secret:
+          secretName: myrouter
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iperf3-svc-b
+spec:
+  ports:
+  - port: 5201
+    targetPort: 5201
+  selector:
+    application: iperf3-server-b-proxy
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: iperf3-server-c-proxy
+spec:
+  selector:
+    matchLabels:
+      application: iperf3-server-c-proxy
+  template:
+    metadata:
+      labels:
+        application: iperf3-server-c-proxy
+    spec:
+      serviceAccountName: icproxy
+      containers:
+      - name: proxy
+        env:
+        - name: ICPROXY_CONFIG
+          value: "amqp:iperf3-server-c=>tcp:5201,tcp:5201=>amqp:iperf3-server-c"
+        - name: ICPROXY_POD_SELECTOR
+          value: "application=iperf3-server-c"
+        image: quay.io/gordons/icproxy
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: connect
+          mountPath: "/etc/messaging/"
+          readOnly: true
+      volumes:
+      - name: connect
+        secret:
+          secretName: myrouter
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iperf3-svc-c
+spec:
+  ports:
+  - port: 5201
+    targetPort: 5201
+  selector:
+    application: iperf3-server-c-proxy
+---
