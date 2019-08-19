@@ -103,19 +103,19 @@ TODO: create a project/namespace, same as topology deployment
 1. In the terminal for the private cloud, deploy the first iperf3 server:
 
    ```bash
-   $ oc apply -f ~/network-iperf-demo/deployment-iperf3-a.yaml
+   $ oc apply -f ~/network-iperf-demo/skupper-example-network-iperf/deployment-iperf3-a.yaml
    ```
 
 2. In the terminal for the first public cloud, deploy the second iperf3 server:
 
    ```bash
-   $ oc apply -f ~/network-iperf-demo/deployment-iperf3-b.yaml   
+   $ oc apply -f ~/network-iperf-demo/skupper-example-network-iperf/deployment-iperf3-b.yaml
    ```
 
 3. In the terminal for the second public cloud, deploy the third iperf3 server:
 
    ```bash
-   $ oc apply -f ~/network-iperf-demo/deployment-iperf3-c.yaml
+   $ oc apply -f ~/network-iperf-demo/skupper-example-network-iperf/deployment-iperf3-c.yaml
    ```
 
 ## Step 6: Run benchmark tests across the clusters
