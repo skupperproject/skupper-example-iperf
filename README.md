@@ -56,7 +56,7 @@ two public clusters and one private cluster:
    ```bash
    $ export SKUPPER_PUBLIC_CLUSTER_COUNT=2
    $ export SKUPPER_PRIVATE_CLUSTER_COUNT=1
-   $ export SKUPPER_NAMESPACE="mongodb-replica-demo"
+   $ export SKUPPER_NAMESPACE="iperf-demo"
    $ export SKUPPER_PUBLIC_CLUSTER_SUFFIX_1="mycluster1.devcluster.openshift.com"
    $ export SKUPPER_PUBLIC_CLUSTER_SUFFIX_2="mycluster2.devcluster.openshift.com"
    $ export SKUPPER_PUBLIC_CLUSTER_NAME_1="us-east"
