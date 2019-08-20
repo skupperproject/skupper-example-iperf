@@ -32,9 +32,9 @@ For each cluster, you will need the following information:
 
    ```bash
    $ mkdir network-iperf-demo
-   $ cd network-iperf-demo
+   $ cd iperf-demo
    $ git clone git@github.com:skupperproject/skoot.git # for creating the application router network
-   $ git clone git@github.com:skupperproject/skupper-example-network-iperf.git # for deploying the iperf3 servers
+   $ git clone git@github.com:skupperproject/skupper-example-iperf.git # for deploying the iperf3 servers
    ```
 
 2. Prepare the OpenShift clusters.
@@ -43,7 +43,7 @@ For each cluster, you will need the following information:
    2. In each cluster, create a namespace for this demo.
   
       ```bash
-      $ oc new-project network-iperf-demo
+      $ oc new-project iperf-demo
       ```
 
 ## Step 2: Define Cluster Topology Values
@@ -69,7 +69,7 @@ two public clusters and one private cluster:
 To generate the deployment yaml files for the defined topology, execute the following:
 
    ```bash
-   $ ~/network-iperf-demo/skoot/scripts/arn.sh | docker run -i quay.io/skupper/skoot | tar --extract
+   $ ~/iperf-demo/skoot/scripts/arn.sh | docker run -i quay.io/skupper/skoot | tar --extract
    ```
 
 ## Step 4: Deploy Application Router Network
@@ -79,17 +79,17 @@ Log in to each cluster, create the common namespace from above and deploy the co
 1. In the terminal for the private cloud, deploy the application router:
 
    ```bash
-   $ oc apply -f ~/network-iperf-demo/yaml/on-prem.yaml
+   $ oc apply -f ~/iperf-demo/yaml/on-prem.yaml
    ```
 2. In the terminal for the first public cloud, deploy the application router:
 
    ```bash
-   $ oc apply -f ~/network-iperf-demo/yaml/us-east.yaml
+   $ oc apply -f ~/iperf-demo/yaml/us-east.yaml
    ```
 3. In the terminal for the second public cloud, deploy the application router:
 
    ```bash
-   $ oc apply -f ~/network-iperf-demo/yaml/us-west.yaml
+   $ oc apply -f ~/iperf-demo/yaml/us-west.yaml
    ```
 
 ## Step 5: Deploy the iperf3 servers
@@ -103,19 +103,19 @@ TODO: create a project/namespace, same as topology deployment
 1. In the terminal for the private cloud, deploy the first iperf3 server:
 
    ```bash
-   $ oc apply -f ~/network-iperf-demo/skupper-example-network-iperf/deployment-iperf3-a.yaml
+   $ oc apply -f ~/iperf-demo/skupper-example-network-iperf/deployment-iperf3-a.yaml
    ```
 
 2. In the terminal for the first public cloud, deploy the second iperf3 server:
 
    ```bash
-   $ oc apply -f ~/network-iperf-demo/skupper-example-network-iperf/deployment-iperf3-b.yaml
+   $ oc apply -f ~/iperf-demo/skupper-example-network-iperf/deployment-iperf3-b.yaml
    ```
 
 3. In the terminal for the second public cloud, deploy the third iperf3 server:
 
    ```bash
-   $ oc apply -f ~/network-iperf-demo/skupper-example-network-iperf/deployment-iperf3-c.yaml
+   $ oc apply -f ~/iperf-demo/skupper-example-network-iperf/deployment-iperf3-c.yaml
    ```
 
 ## Step 6: Run benchmark tests across the clusters

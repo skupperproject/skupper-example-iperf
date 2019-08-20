@@ -44,7 +44,7 @@ spec:
         application: iperf3-server-c
     spec:
       containers: 
-        - image: quay.io/ajssmith/iperf3
+        - image: quay.io/skupper/simple-iperf
           name: iperf3-server
           command:
             - iperf3
