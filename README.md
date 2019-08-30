@@ -8,11 +8,9 @@ To complete this tutorial, do the following:
 
 * [Prerequisites](#prerequisites)
 * [Step 1: Set up the demo](#step-1-set-up-the-demo)
-* [Step 2: Define Cluster Topology Values](#step-2-define-cluster-topology-values)
-* [Step 3: Generate Cluster Network Files](#step-3-generate-cluster-network-files)
-* [Step 4: Deploy Application Router Network](#step-4-deploy-application-router-network)
-* [Step 5: Deploy the iperf3 servers](#step-5-deploy-the-iperf3-servers)
-* [Step 6: Run benchmark tests across the clusters](#step-6-run-benchmark-tests-across-the-clusters)
+* [Step 2: Deploy Application Router Network](#step-2-deploy-application-router-network)
+* [Step 3: Deploy the iperf3 servers](#step-3-deploy-the-iperf3-servers)
+* [Step 4: Run benchmark tests across the clusters](#step-4-run-benchmark-tests-across-the-clusters)
 * [Next steps](#next-steps)
 
 ## Prerequisites
@@ -31,10 +29,10 @@ For each cluster, you will need the following information:
 1. On your local machine, make a directory for this tutorial and clone the following repos into it:
 
    ```bash
-   $ mkdir network-iperf-demo
+   $ mkdir iperf-demo
    $ cd iperf-demo
-   $ git clone git@github.com:skupperproject/skoot.git # for creating the application router network
    $ git clone git@github.com:skupperproject/skupper-example-iperf.git # for deploying the iperf3 servers
+   $ wget https://github.com/skupperproject/skupper-cli/releases/download/dummy/linux.tgz -O - | tar -xzf - # cli for application router network
    ```
 
 2. Prepare the OpenShift clusters.
@@ -46,57 +44,37 @@ For each cluster, you will need the following information:
       $ oc new-project iperf-demo
       ```
 
-## Step 2: Define Cluster Topology Values
+## Step 2: Deploy Application Router Network
 
-Define the values for the application router network topology by setting up the required
-environment variables. Presently, the example deployments can support up to three public
-clusters and up to three private clusters.The following depicts an example deployment for
-two public clusters and one private cluster:
+On each cluster, define the application router role and connectivity to peer clusters.
 
-   ```bash
-   $ export SKUPPER_PUBLIC_CLUSTER_COUNT=2
-   $ export SKUPPER_PRIVATE_CLUSTER_COUNT=1
-   $ export SKUPPER_NAMESPACE="iperf-demo"
-   $ export SKUPPER_PUBLIC_CLUSTER_SUFFIX_1="mycluster1.devcluster.openshift.com"
-   $ export SKUPPER_PUBLIC_CLUSTER_SUFFIX_2="mycluster2.devcluster.openshift.com"
-   $ export SKUPPER_PUBLIC_CLUSTER_NAME_1="us-east"
-   $ export SKUPPER_PUBLIC_CLUSTER_NAME_2="us-west"
-   $ export SKUPPER_PRIVATE_CLUSTER_NAME_1="on-prem"
-   ```
-
-## Step 3: Generate Cluster Network Files
-
-To generate the deployment yaml files for the defined topology, execute the following:
+1. In the terminal for the first public cluster, deploy the *public1* application router, and create its secrets:
 
    ```bash
-   $ ~/iperf-demo/skoot/scripts/arn.sh | docker run -i quay.io/skupper/skoot | tar --extract
+   $ ~/iperf-demo/skupper init --hub --name public1
+   $ ~/iperf-demo/skupper secret --file ~/iperf-demo/private1-to-public1-secret.yaml --subject private1
+   $ ~/iperf-demo/skupper secret --file ~/iperf-demo/public2-to-public1-secret.yaml --subject public2
    ```
 
-## Step 4: Deploy Application Router Network
-
-Log in to each cluster, create the common namespace from above and deploy the corresponding yaml file.
-
-1. In the terminal for the private cloud, deploy the application router:
+2. In the terminal for the second public cluster, deploy the *public2* application router, create its secrets and define its connections to the peer *public1* cluster:
 
    ```bash
-   $ oc apply -f ~/iperf-demo/yaml/on-prem.yaml
+   $ ~/iperf-demo/skupper init --hub --name public2
+   $ ~/iperf-demo/skupper secret --file ~/iperf-demo/private1-to-public2-secret.yaml --subject private1
+   $ ~/iperf-demo/skupper connect --secret ~/iperf-demo/public2-to-public1-secret.yaml --name public1
    ```
-2. In the terminal for the first public cloud, deploy the application router:
+
+3. In the terminal for the private cluster, deploy the *on-prem* application router and define its connections to the public clusters
 
    ```bash
-   $ oc apply -f ~/iperf-demo/yaml/us-east.yaml
-   ```
-3. In the terminal for the second public cloud, deploy the application router:
-
-   ```bash
-   $ oc apply -f ~/iperf-demo/yaml/us-west.yaml
+   $ ~/iperf-demo/skupper init --name private1
+   $ ~/iperf-demo/skupper connect --secret ~/iperf-demo/private1-to-public1-secret.yaml --name public1
+   $ ~/iperf-demo/skupper connect --secret ~/iperf-demo/private1-to-public2-secret.yaml --name public2
    ```
 
-## Step 5: Deploy the iperf3 servers
+## Step 4: Deploy the iperf3 servers
 
 After creating the application router network, you deploy the three iperf3 servers to each of the clusters.
-
-The `demos/network-iperf` directory contains the YAML files that you will use to create the servers. Each YAML file describes the set of Kubernetes resources needed to create an iperf3 server and connect it to the application router network.
 
 TODO: create a project/namespace, same as topology deployment
 
@@ -118,7 +96,7 @@ TODO: create a project/namespace, same as topology deployment
    $ oc apply -f ~/iperf-demo/skupper-example-network-iperf/deployment-iperf3-c.yaml
    ```
 
-## Step 6: Run benchmark tests across the clusters
+## Step 5: Run benchmark tests across the clusters
 
 After deploying the iperf3 servers into the private and public cloud clusters, the application router network connects the servers and enables communications even though they are running in separate clusters.
 
