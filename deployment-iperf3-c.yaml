@@ -26,8 +26,7 @@ kind: Service
 metadata:
   name: iperf3-svc-a
   annotations:
-    proxy.skupper.github.com/network: skupper
-    proxy.skupper.github.com/protocol: tcp
+    skupper.io/proxy: tcp
 spec:
   ports:
   - port: 5201
@@ -40,8 +39,7 @@ kind: Service
 metadata:
   name: iperf3-svc-b
   annotations:
-    proxy.skupper.github.com/network: skupper
-    proxy.skupper.github.com/protocol: tcp
+    skupper.io/proxy: tcp
 spec:
   ports:
   - port: 5201
@@ -54,8 +52,7 @@ kind: Service
 metadata:
   name: iperf3-svc-c
   annotations:
-    proxy.skupper.github.com/network: skupper
-    proxy.skupper.github.com/protocol: tcp
+    skupper.io/proxy: tcp
 spec:
   ports:
   - port: 5201

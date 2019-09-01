@@ -32,7 +32,7 @@ For each cluster, you will need the following information:
    $ mkdir iperf-demo
    $ cd iperf-demo
    $ git clone git@github.com:skupperproject/skupper-example-iperf.git # for deploying the iperf3 servers
-   $ wget https://github.com/skupperproject/skupper-cli/releases/download/dummy/linux.tgz -O - | tar -xzf - # cli for application router network
+   $ wget https://github.com/skupperproject/skupper-cli/releases/download/dummy3/linux.tgz -O - | tar -xzf - # cli for application router network
    ```
 
 2. Prepare the OpenShift clusters.
@@ -51,25 +51,25 @@ On each cluster, define the application router role and connectivity to peer clu
 1. In the terminal for the first public cluster, deploy the *public1* application router, and create its secrets:
 
    ```bash
-   $ ~/iperf-demo/skupper init --hub --name public1
-   $ ~/iperf-demo/skupper secret --file ~/iperf-demo/private1-to-public1-secret.yaml --subject private1
-   $ ~/iperf-demo/skupper secret --file ~/iperf-demo/public2-to-public1-secret.yaml --subject public2
+   $ ~/iperf-demo/skupper init --id public1
+   $ ~/iperf-demo/skupper secret ~/iperf-demo/private1-to-public1-secret.yaml -i private1
+   $ ~/iperf-demo/skupper secret ~/iperf-demo/public2-to-public1-secret.yaml -i public2
    ```
 
 2. In the terminal for the second public cluster, deploy the *public2* application router, create its secrets and define its connections to the peer *public1* cluster:
 
    ```bash
-   $ ~/iperf-demo/skupper init --hub --name public2
-   $ ~/iperf-demo/skupper secret --file ~/iperf-demo/private1-to-public2-secret.yaml --subject private1
-   $ ~/iperf-demo/skupper connect --secret ~/iperf-demo/public2-to-public1-secret.yaml --name public1
+   $ ~/iperf-demo/skupper init --id public2
+   $ ~/iperf-demo/skupper secret ~/iperf-demo/private1-to-public2-secret.yaml -i private1
+   $ ~/iperf-demo/skupper connect ~/iperf-demo/public2-to-public1-secret.yaml --name public1
    ```
 
 3. In the terminal for the private cluster, deploy the *on-prem* application router and define its connections to the public clusters
 
    ```bash
-   $ ~/iperf-demo/skupper init --name private1
-   $ ~/iperf-demo/skupper connect --secret ~/iperf-demo/private1-to-public1-secret.yaml --name public1
-   $ ~/iperf-demo/skupper connect --secret ~/iperf-demo/private1-to-public2-secret.yaml --name public2
+   $ ~/iperf-demo/skupper init --edge --id private1
+   $ ~/iperf-demo/skupper connect ~/iperf-demo/private1-to-public1-secret.yaml --name public1
+   $ ~/iperf-demo/skupper connect ~/iperf-demo/private1-to-public2-secret.yaml --name public2
    ```
 
 ## Step 4: Deploy the iperf3 servers
