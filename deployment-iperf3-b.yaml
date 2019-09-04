@@ -24,19 +24,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: iperf3-svc-a
-  annotations:
-    skupper.io/proxy: tcp
-spec:
-  ports:
-  - port: 5201
-    targetPort: 5201
-  selector:
-    application: iperf3-server-a
----
-apiVersion: v1
-kind: Service
-metadata:
   name: iperf3-svc-b
   annotations:
     skupper.io/proxy: tcp
@@ -46,17 +33,4 @@ spec:
     targetPort: 5201
   selector:
     application: iperf3-server-b
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: iperf3-svc-c
-  annotations:
-    skupper.io/proxy: tcp
-spec:
-  ports:
-  - port: 5201
-    targetPort: 5201
-  selector:
-    application: iperf3-server-c
 ---
