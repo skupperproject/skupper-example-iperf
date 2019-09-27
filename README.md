@@ -31,7 +31,7 @@ For the purpose of running the benchmark test against the public clusters, you s
    mkdir iperf-demo
    cd iperf-demo
    git clone https://github.com/skupperproject/skupper-example-iperf.git
-   curl -fL https://github.com/skupperproject/skupper-cli/releases/download/0.0.1-alpha/linux.tgz -o skupper.tgz
+   curl -fL https://github.com/skupperproject/skupper-cli/releases/download/0.0.1-beta3/linux.tgz -o skupper.tgz
    mkdir $HOME/bin
    tar -xf skupper.tgz --directory $HOME/bin
    export PATH=$PATH:$HOME/bin
