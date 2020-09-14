@@ -8,10 +8,11 @@ To complete this tutorial, do the following:
 
 * [Prerequisites](#prerequisites)
 * [Step 1: Set up the demo](#step-1-set-up-the-demo)
-* [Step 2: Deploy the Skupper Network](#step-2-deploy-the-skupper-network)
+* [Step 2: Deploy the Virtual Application Network](#step-2-deploy-the-virtual-application-network)
 * [Step 3: Deploy the iperf3 servers](#step-3-deploy-the-iperf3-servers)
-* [Step 4: Annotate services to join the Skupper Network](#step-3-annotate-services-to-join-the-skupper-network)
-* [Step 5: Run benchmark tests across the clusters](#step-4-run-benchmark-tests-across-the-clusters)
+* [Step 4: Expose the deployments to the Virtual Application Network](#step-4-expose-the-deployments-to-the-virtual-application-network)
+* [Step 5: Run benchmark tests across the clusters](#step-5-run-benchmark-tests-across-the-clusters)
+* [Cleaning up](#cleaning-up)
 * [Next steps](#next-steps)
 
 ## Prerequisites
@@ -45,14 +46,14 @@ For the purpose of running the benchmark test against the public clusters, you s
    [...]
    ```
 
-## Step 2: Deploy the Skupper Network
+## Step 2: Deploy the Virtual Application Network
 
 On each cluster, define the application router role and connectivity to peer clusters.
 
 1. In the terminal for the first public cluster, deploy the *public1* application router, and create its secrets:
 
    ```bash
-   skupper init --id public1
+   skupper init --site-name public1
    skupper connection-token private1-to-public1-token.yaml
    skupper connection-token public2-to-public1-token.yaml
    ```
@@ -60,7 +61,7 @@ On each cluster, define the application router role and connectivity to peer clu
 2. In the terminal for the second public cluster, deploy the *public2* application router, create its secrets and define its connections to the peer *public1* cluster:
 
    ```bash
-   skupper init --id public2
+   skupper init --site-name public2
    skupper connection-token private1-to-public2-token.yaml
    skupper connect public2-to-public1-token.yaml
    ```
@@ -68,7 +69,7 @@ On each cluster, define the application router role and connectivity to peer clu
 3. In the terminal for the private cluster, deploy the *private1* application router and define its connections to the public clusters
 
    ```bash
-   skupper init --id private1
+   skupper init --site-name private1
    skupper connect private1-to-public1-token.yaml
    skupper connect private1-to-public2-token.yaml
    ```
@@ -95,80 +96,91 @@ After creating the application router network, you deploy the three iperf3 serve
    kubectl apply -f ~/iperf-demo/skupper-example-iperf/deployment-iperf3-c.yaml
    ```
 
-## Step 4: Annotate services to join to the Skupper Network
+## Step 4: Expose the deployments to the Virtual Application Network
 
 
-1. In the terminal for the *private1* cluster, annotate the iperf3-svc-a service:
-
-   ```bash
-   kubectl annotate service iperf3-svc-a skupper.io/proxy=tcp
-   ```
-
-2. In the terminal for the *public1* cluster, annotate the iperf3-svc-b service:
+1. In the terminal for the *private1* cluster, expose the mongo-a deployment:
 
    ```bash
-   kubectl annotate service iperf3-svc-b skupper.io/proxy=tcp
+   skupper expose deployment iperf3-server-a --port 5201
    ```
 
-3. In the terminal for the *public2* cluster, annotate the iperf3-svc-c service:
+2. In the terminal for the *public1* cluster, annotate the mongo-b deployment:
 
    ```bash
-   kubectl annotate service iperf3-svc-c skupper.io/proxy=tcp
+   skupper expose deployment iperf3-server-b --port 5201
    ```
+
+3. In the terminal for the *public2* cluster, annotate the mongo-c deployment:
+
+   ```bash
+   skupper expose deployment iperf3-server-c --port 5201
+   ```
+
+4. In each of the cluster terminals, verify the exposed service is present
+
+   ```bash
+   skupper list-exposed
+   ```
+
+    Note that each cluster depicts the target it provides.
 
 ## Step 5: Run benchmark tests across the clusters
 
 After deploying the iperf3 servers into the private and public cloud clusters, the application router network connects the servers and enables communications even though they are running in separate clusters.
 
-1. In the terminal for the *private1* cluster, run the iperf3 client benchmark against each server:
+1. In the terminal for the *private1* cluster, attach to the iperf3-server-a container running in the cluster and run the iperf3 client benchmark against each server:
 
    ```bash
-   iperf3 -c  $(kubectl get service iperf3-svc-a -o=jsonpath='{.spec.clusterIP}')
-   iperf3 -c  $(kubectl get service iperf3-svc-b -o=jsonpath='{.spec.clusterIP}')
-   iperf3 -c  $(kubectl get service iperf3-svc-c -o=jsonpath='{.spec.clusterIP}')
+   kubectl exec -it $(kubectl get pod -l application=iperf3-server-a -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c iperf3-server-a
+   kubectl exec -it $(kubectl get pod -l application=iperf3-server-a -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c iperf3-server-b
+   kubectl exec -it $(kubectl get pod -l application=iperf3-server-a -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c iperf3-server-c
    ```
 
-2. In the terminal for the *public1* cluster, attach to the iperf3 server container running in the cluster and run the iperf3 client benchmark against each server:
+2. In the terminal for the *public1* cluster, attach to the iperf3-server-b container running in the cluster and run the iperf3 client benchmark against each server:
 
    ```bash
-   kubectl exec -it $(kubectl get pod -l application=iperf3-server-b -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c  $(kubectl get service iperf3-svc-a -o=jsonpath='{.spec.clusterIP}')
-   kubectl exec -it $(kubectl get pod -l application=iperf3-server-b -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c  $(kubectl get service iperf3-svc-b -o=jsonpath='{.spec.clusterIP}')
-   kubectl exec -it $(kubectl get pod -l application=iperf3-server-b -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c  $(kubectl get service iperf3-svc-c -o=jsonpath='{.spec.clusterIP}')
+   kubectl exec -it $(kubectl get pod -l application=iperf3-server-b -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c iperf3-server-a
+   kubectl exec -it $(kubectl get pod -l application=iperf3-server-b -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c iperf3-server-b
+   kubectl exec -it $(kubectl get pod -l application=iperf3-server-b -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c iperf3-server-c
    ```
 
-3. In the terminal for the *public2* cluster, attach to the iperf3 server container running in the cluster and run the iperf3 client benchmark against each server:
+3. In the terminal for the *public2* cluster, attach to the iperf3-server-c container running in the cluster and run the iperf3 client benchmark against each server:
 
    ```bash
-   kubectl exec -it $(kubectl get pod -l application=iperf3-server-c -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c  $(kubectl get service iperf3-svc-a -o=jsonpath='{.spec.clusterIP}')
-   kubectl exec -it $(kubectl get pod -l application=iperf3-server-c -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c  $(kubectl get service iperf3-svc-b -o=jsonpath='{.spec.clusterIP}')
-   kubectl exec -it $(kubectl get pod -l application=iperf3-server-c -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c  $(kubectl get service iperf3-svc-c -o=jsonpath='{.spec.clusterIP}')
+   kubectl exec -it $(kubectl get pod -l application=iperf3-server-c -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c iperf3-server-a
+   kubectl exec -it $(kubectl get pod -l application=iperf3-server-c -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c iperf3-server-b
+   kubectl exec -it $(kubectl get pod -l application=iperf3-server-c -o=jsonpath='{.items[0].metadata.name}') -- iperf3 -c iperf3-server-c
    ```
 
-## Next steps
+## Cleaning Up
 
 Restore your cluster environment by returning the resource created in the demonstration. On each cluster, delete the demo resources and the skupper network:
 
 1. In the terminal for the *private1* cluster, delete the resources:
 
-
    ```bash
+   kubectl unexpose deployment iperf3-server-a
    kubectl delete -f ~/iperf-demo/skupper-example-iperf/deployment-iperf3-a.yaml
    skupper delete
    ```
 
 2. In the terminal for the *public1* cluster, delete the resources:
 
-
    ```bash
+   kubectl unexpose deployment iperf3-server-b
    kubectl delete -f ~/iperf-demo/skupper-example-iperf/deployment-iperf3-b.yaml
    skupper delete
    ```
 
 3. In the terminal for the *public2* cluster, delete the resources:
 
-
    ```bash
+   kubectl unexpose deployment iperf3-server-c
    kubectl delete -f ~/iperf-demo/skupper-example-iperf/deployment-iperf3-c.yaml
    skupper delete
    ```
 
+## Next Steps
+
+ - [Find more examples](https://skupper.io/examples/)
