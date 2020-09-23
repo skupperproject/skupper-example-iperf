@@ -1,10 +1,13 @@
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata: 
   name: iperf3-server-c
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      application: iperf3-server-c
   template:
     metadata:
       labels:
@@ -17,15 +20,3 @@ spec:
             - iperf3
             - "-s"
           imagePullPolicy: IfNotPresent
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: iperf3-svc-c
-spec:
-  ports:
-  - port: 5201
-    targetPort: 5201
-  selector:
-    application: iperf3-server-c
----
