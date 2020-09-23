@@ -99,19 +99,19 @@ After creating the application router network, you deploy the three iperf3 serve
 ## Step 4: Expose the deployments to the Virtual Application Network
 
 
-1. In the terminal for the *private1* cluster, expose the mongo-a deployment:
+1. In the terminal for the *private1* cluster, expose the iperf3-server-a deployment:
 
    ```bash
    skupper expose deployment iperf3-server-a --port 5201
    ```
 
-2. In the terminal for the *public1* cluster, annotate the mongo-b deployment:
+2. In the terminal for the *public1* cluster, annotate the iperf3-server-b deployment:
 
    ```bash
    skupper expose deployment iperf3-server-b --port 5201
    ```
 
-3. In the terminal for the *public2* cluster, annotate the mongo-c deployment:
+3. In the terminal for the *public2* cluster, annotate the iperf3-server-c deployment:
 
    ```bash
    skupper expose deployment iperf3-server-c --port 5201
