@@ -54,24 +54,24 @@ On each cluster, define the application router role and connectivity to peer clu
 
    ```bash
    skupper init --site-name public1
-   skupper connection-token private1-to-public1-token.yaml
-   skupper connection-token public2-to-public1-token.yaml
+   skupper token create private1-to-public1-token.yaml
+   skupper token create public2-to-public1-token.yaml
    ```
 
 2. In the terminal for the second public cluster, deploy the *public2* application router, create its secrets and define its connections to the peer *public1* cluster:
 
    ```bash
    skupper init --site-name public2
-   skupper connection-token private1-to-public2-token.yaml
-   skupper connect public2-to-public1-token.yaml
+   skupper token create private1-to-public2-token.yaml
+   skupper link create public2-to-public1-token.yaml
    ```
 
 3. In the terminal for the private cluster, deploy the *private1* application router and define its connections to the public clusters
 
    ```bash
    skupper init --site-name private1
-   skupper connect private1-to-public1-token.yaml
-   skupper connect private1-to-public2-token.yaml
+   skupper link create private1-to-public1-token.yaml
+   skupper link create private1-to-public2-token.yaml
    ```
 
 ## Step 3: Deploy the iperf3 servers
@@ -120,7 +120,7 @@ After creating the application router network, you deploy the three iperf3 serve
 4. In each of the cluster terminals, verify the exposed service is present
 
    ```bash
-   skupper list-exposed
+   skupper service status
    ```
 
     Note that each cluster depicts the target it provides.
