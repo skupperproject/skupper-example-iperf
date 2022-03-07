@@ -22,8 +22,14 @@ To complete this tutorial, do the following:
 
 ## Prerequisites
 
-* The `kubectl` command-line tool, version 1.15 or later ([installation guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
-* The `skupper` command-line tool, version 0.5 or later ([installation guide](https://skupper.io/start/index.html#step-1-install-the-skupper-command-line-tool-in-your-environment))
+* The `kubectl` command-line tool, version 1.15 or later
+  ([installation guide][install-kubectl])
+
+* The `skupper` command-line tool, the latest version ([installation
+  guide][install-skupper])
+
+[install-kubectl]: https://kubernetes.io/docs/tasks/tools/install-kubectl/
+[install-skupper]: https://skupper.io/install/index.html
 
 The basis for this demonstration is to test communication performance across distributed clusters. You should have access to three independent clusters to observe performance over a Skupper Network. As an example, the three clusters might be composed of:
 
@@ -45,7 +51,9 @@ The basis for this demonstration is to test communication performance across dis
 
    1. On your local machine, log in to each cluster in a separate terminal session.
    2. In each cluster, create a namespace to use for the demo.
-   3. In each cluster, set the kubectl config context to use the demo namespace [(see kubectl cheat sheet)](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
+   3. In each cluster, set the kubectl config context to use the demo namespace ([see kubectl cheat sheet][cheatsheet-kubectl])
+
+[cheatsheet-kubectl]: https://kubernetes.io/docs/reference/kubectl/cheatsheet/
 
 ## Step 2: Deploy the Virtual Application Network
 
