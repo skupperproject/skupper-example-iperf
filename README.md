@@ -201,24 +201,21 @@ Restore your cluster environment by returning the resources created in the demon
 1. In the terminal for the **private1** cluster, delete the resources:
 
    ```bash
-   kubectl unexpose deployment iperf3-server-a
-   kubectl delete -f ~/iperf-demo/skupper-example-iperf/deployment-iperf3-a.yaml
+   kubectl delete deployment iperf3-server-a
    skupper delete
    ```
 
 2. In the terminal for the **public1** cluster, delete the resources:
 
    ```bash
-   kubectl unexpose deployment iperf3-server-b
-   kubectl delete -f ~/iperf-demo/skupper-example-iperf/deployment-iperf3-b.yaml
+   kubectl delete deployment iperf3-server-b
    skupper delete
    ```
 
 3. In the terminal for the **public2** cluster, delete the resources:
 
    ```bash
-   kubectl unexpose deployment iperf3-server-c
-   kubectl delete -f ~/iperf-demo/skupper-example-iperf/deployment-iperf3-c.yaml
+   kubectl delete deployment iperf3-server-c
    skupper delete
    ```
 
