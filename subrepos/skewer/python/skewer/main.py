@@ -190,10 +190,10 @@ def _pause_for_demo(work_dir, skewer_data):
         password_data = call("kubectl get secret skupper-console-users -o jsonpath='{.data.admin}'")
         password = base64_decode(password_data).decode("ascii")
 
-        if run("kubectl get service/frontend", check=False, output=DEVNULL).exit_code == 0:
-            if call("kubectl get service/frontend -o jsonpath='{.spec.type}'") == "LoadBalancer":
-                frontend_ip = await_external_ip("service", "frontend")
-                frontend_url = f"http://{frontend_ip}:8080/"
+#         if run("kubectl get service/frontend", check=False, output=DEVNULL).exit_code == 0:
+#             if call("kubectl get service/frontend -o jsonpath='{.spec.type}'") == "LoadBalancer":
+#                 frontend_ip = await_external_ip("service", "frontend")
+#                 frontend_url = f"http://{frontend_ip}:8080/"
 
     print()
     print("Demo time!")
