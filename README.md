@@ -1,6 +1,8 @@
-# Testing network throughput across clusters
+# iPerf
 
 [![main](https://github.com/skupperproject/skupper-example-iperf/actions/workflows/main.yaml/badge.svg)](https://github.com/skupperproject/skupper-example-iperf/actions/workflows/main.yaml)
+
+#### Perform real-time network throughput measurements while using iPerf3
 
 This example is part of a [suite of examples][examples] showing the
 different ways you can use [Skupper][website] to connect services
@@ -13,18 +15,16 @@ across cloud providers, data centers, and edge sites.
 
 * [Overview](#overview)
 * [Prerequisites](#prerequisites)
-* [Step 1: Set up the demo](#step-1-set-up-the-demo)
-* [Step 2: Install the Skupper command-line tool](#step-2-install-the-skupper-command-line-tool)
-* [Step 3: Configure separate console sessions](#step-3-configure-separate-console-sessions)
-* [Step 4: Access your clusters](#step-4-access-your-clusters)
-* [Step 5: Set up your namespaces](#step-5-set-up-your-namespaces)
-* [Step 6: Install Skupper in your namespaces](#step-6-install-skupper-in-your-namespaces)
-* [Step 7: Check the status of your namespaces](#step-7-check-the-status-of-your-namespaces)
-* [Step 8: Deploy the Virtual Application Network](#step-8-deploy-the-virtual-application-network)
-* [Step 9: Deploy the iperf3 servers](#step-9-deploy-the-iperf3-servers)
-* [Step 10: Create Skupper services for the Virtual Application Network](#step-10-create-skupper-services-for-the-virtual-application-network)
-* [Step 11: Bind the Skupper services to the deployment targets on the Virtual Application Network](#step-11-bind-the-skupper-services-to-the-deployment-targets-on-the-virtual-application-network)
-* [Step 12: Run benchmark tests across the clusters](#step-12-run-benchmark-tests-across-the-clusters)
+* [Step 1: Install the Skupper command-line tool](#step-1-install-the-skupper-command-line-tool)
+* [Step 2: Configure separate console sessions](#step-2-configure-separate-console-sessions)
+* [Step 3: Access your clusters](#step-3-access-your-clusters)
+* [Step 4: Set up your namespaces](#step-4-set-up-your-namespaces)
+* [Step 5: Install Skupper in your namespaces](#step-5-install-skupper-in-your-namespaces)
+* [Step 6: Check the status of your namespaces](#step-6-check-the-status-of-your-namespaces)
+* [Step 7: Link your namespaces](#step-7-link-your-namespaces)
+* [Step 8: Deploy the iperf3 servers](#step-8-deploy-the-iperf3-servers)
+* [Step 9: Expose iperf3 from each namespace](#step-9-expose-iperf3-from-each-namespace)
+* [Step 10: Run benchmark tests across the clusters](#step-10-run-benchmark-tests-across-the-clusters)
 * [Accessing the web console](#accessing-the-web-console)
 * [Cleaning up](#cleaning-up)
 * [Next steps](#next-steps)
@@ -32,42 +32,24 @@ across cloud providers, data centers, and edge sites.
 
 ## Overview
 
-This tutorial demonstrates how to perform real-time network throughput measurements on a Virtual Application Network 
+This tutorial demonstrates how to perform real-time network throughput measurements across Kubernetes 
 using the iperf3 tool.
-In this tutorial you will:
-* deploy iperf3 servers in three separate clusters
-* use the iperf3 server pods to run iperf3 client test instances
-
-* create a Virtual Application Network which will enable the iperf3 client test instances to access iperf3 
-servers in any cluster
+In this tutorial you:
+* deploy iperf3 in three separate clusters
+* run iperf3 client test instances
 
 ## Prerequisites
 
 * The `kubectl` command-line tool, version 1.15 or later
 ([installation guide][install-kubectl])
 
-* The `skupper` command-line tool, the latest version ([installation
-guide][install-skupper])
-[install-kubectl]: https://kubernetes.io/docs/tasks/tools/install-kubectl/
-[install-skupper]: https://skupper.io/install/index.html
-The basis for this demonstration is to test communication performance across distributed clusters. 
-You should have access to three independent clusters to observe performance over a Skupper Network. 
-As an example, the three clusters might be composed of:
+* Access to three clusters to observe performance. 
+As an example, the three clusters might consist of:
 
 * A private cloud cluster running on your local machine (**private1**)
 * Two public cloud clusters running in public cloud providers (**public1** and **public2**)
 
-## Step 1: Set up the demo
-
-On your local machine, make a directory for this tutorial and clone the example repo into it:
-
-```bash
-mkdir ~/iperf-demo
-cd ~/iperf-demo
-git clone https://github.com/skupperproject/skupper-skewer-iperf.git
-```
-
-## Step 2: Install the Skupper command-line tool
+## Step 1: Install the Skupper command-line tool
 
 The `skupper` command-line tool is the entrypoint for installing
 and configuring Skupper.  You need to install the `skupper`
@@ -84,7 +66,7 @@ Skupper][install-docs].
 [install-script]: https://github.com/skupperproject/skupper-website/blob/main/docs/install.sh
 [install-docs]: https://skupper.io/install/index.html
 
-## Step 3: Configure separate console sessions
+## Step 2: Configure separate console sessions
 
 Skupper is designed for use with multiple namespaces, usually on
 different clusters.  The `skupper` command uses your
@@ -119,7 +101,7 @@ _**Console for private1:**_
 export KUBECONFIG=~/.kube/config-private1
 ~~~
 
-## Step 4: Access your clusters
+## Step 3: Access your clusters
 
 The procedure for accessing a Kubernetes cluster varies by
 provider. [Find the instructions for your chosen
@@ -127,7 +109,7 @@ provider][kube-providers] and use them to authenticate and
 configure access for each console session.
 [kube-providers]: https://skupper.io/start/kubernetes.html
 
-## Step 5: Set up your namespaces
+## Step 4: Set up your namespaces
 
 Use `kubectl create namespace` to create the namespaces you wish
 to use (or use existing namespaces).  Use `kubectl config
@@ -154,7 +136,7 @@ kubectl create namespace private1
 kubectl config set-context --current --namespace private1
 ~~~
 
-## Step 6: Install Skupper in your namespaces
+## Step 5: Install Skupper in your namespaces
 
 The `skupper init` command installs the Skupper router and service
 controller in the current namespace.  Run the `skupper init` command
@@ -188,7 +170,7 @@ Waiting for LoadBalancer IP or hostname...
 Skupper is now installed in namespace '<namespace>'.  Use 'skupper status' to get more information.
 ~~~
 
-## Step 7: Check the status of your namespaces
+## Step 6: Check the status of your namespaces
 
 Use `skupper status` in each console to check that Skupper is
 installed.
@@ -220,7 +202,7 @@ The credentials for internal console-auth mode are held in secret: 'skupper-cons
 As you move through the steps below, you can use `skupper status` at
 any time to check your progress.
 
-## Step 8: Deploy the Virtual Application Network
+## Step 7: Link your namespaces
 
 Creating a link requires use of two `skupper` commands in
 conjunction, `skupper token create` and `skupper link create`.
@@ -235,42 +217,34 @@ trust have access to it.
 First, use `skupper token create` in one namespace to generate the
 token.  Then, use `skupper link create` in the other to create a
 link.
-On each cluster, using the `skupper` tool, define the Virtual Application Network and the connectivity for the peer clusters.
-1. In the terminal for the first public cluster, deploy the **public1** application router. 
-Create a connection token for connections from the **public2** cluster and the **private1** cluster.
-2. In the terminal for the second public cluster, deploy the **public2** application router. 
-Create a connection token for connections from the **private1** cluser and connect to the **public1** cluster.
-3. In the terminal for the private cluster, deploy the **private1** application router. 
-Connect to the **public1** and **public2** clusters.
+Continue this pattern until all namespaces are linked.
 
 _**Console for public1:**_
 
 ~~~ shell
-skupper token create ./tmp/private1-to-public1-token.yaml
-skupper token create ./tmp/public2-to-public1-token.yaml
+skupper token create ~/private1-to-public1-token.yaml
+skupper token create ~/public2-to-public1-token.yaml
 ~~~
 
 _**Console for public2:**_
 
 ~~~ shell
-skupper token create ./tmp/private1-to-public2-token.yaml
-skupper link create ./tmp/public2-to-public1-token.yaml
+skupper token create ~/private1-to-public2-token.yaml
+skupper link create ~/public2-to-public1-token.yaml
+skupper link status --wait 60
 ~~~
 
 _**Console for private1:**_
 
 ~~~ shell
-skupper link create ./tmp/private1-to-public1-token.yaml
-skupper link create ./tmp/private1-to-public2-token.yaml
+skupper link create ~/private1-to-public1-token.yaml
+skupper link create ~/private1-to-public2-token.yaml
+skupper link status --wait 60
 ~~~
 
-## Step 9: Deploy the iperf3 servers
+## Step 8: Deploy the iperf3 servers
 
-After creating the application router network, deploy one iperf3 server to each of the clusters.
-
-1. In the terminal for the **private1** cluster, deploy the first iperf3 server.
-2. In the terminal for the **public1** cluster, deploy the second iperf3 server.
-3. In the terminal for the **public2** cluster, deploy the third iperf3 server.
+After creating the application router network, deploy `iperf3` in each namespace.
 
 _**Console for private1:**_
 
@@ -290,76 +264,34 @@ _**Console for public2:**_
 kubectl apply -f deployment-iperf3-c.yaml
 ~~~
 
-## Step 10: Create Skupper services for the Virtual Application Network
+## Step 9: Expose iperf3 from each namespace
 
-1. In the terminal for the **private1** cluster, create the iperf3-server-a service.
-2. In the terminal for the **public1** cluster, create the iperf3-server-b service.
-3. In the terminal for the **public2** cluster, create the iperf3-server-c service.
+We have established connectivity between the namespaces and deployed `iperf3`.
+Before we can test performance, we need access to the `iperf3` from each namespace.
 
 _**Console for private1:**_
 
 ~~~ shell
-skupper service create iperf3-server-a 5201
+skupper expose deployment/iperf3-server-a --port 5201
 ~~~
 
 _**Console for public1:**_
 
 ~~~ shell
-skupper service create iperf3-server-b 5201
+skupper expose deployment/iperf3-server-b --port 5201
 ~~~
 
 _**Console for public2:**_
 
 ~~~ shell
-skupper service create iperf3-server-c 5201
+skupper expose deployment/iperf3-server-c --port 5201
 ~~~
 
-4. In each of the cluster terminals, verify that the services are present:
-```bash
-skupper service status
-```
-Note that each cluster depicts the target it provides.
+## Step 10: Run benchmark tests across the clusters
 
-## Step 11: Bind the Skupper services to the deployment targets on the Virtual Application Network
-
-1. In the terminal for the **private1** cluster, expose the iperf3-server-a deployment.
-2. In the terminal for the **public1** cluster, annotate the iperf3-server-b deployment.
-3. In the terminal for the **public2** cluster, annotate the iperf3-server-c deployment.
-
-_**Console for private1:**_
-
-~~~ shell
-skupper service bind iperf3-server-a deployment iperf3-server-a
-~~~
-
-_**Console for public1:**_
-
-~~~ shell
-skupper service bind iperf3-server-b deployment iperf3-server-b
-~~~
-
-_**Console for public2:**_
-
-~~~ shell
-skupper service bind iperf3-server-c deployment iperf3-server-c
-~~~
-
-4. In each of the cluster terminals, verify the services bind to the targets
-```bash
-skupper service status
-```
-Note that each cluster depicts the target it provides.
-
-## Step 12: Run benchmark tests across the clusters
-
-After deploying the iperf3 servers into the private and public cloud clusters, the application router network
-connects the servers and enables communications even though they are running in separate clusters.
-1. In the terminal for the **private1** cluster, attach to the iperf3-server-a container running in the
-**private1** cluster and run the iperf3 client benchmark against each server.
-2. In the terminal for the **public1** cluster, attach to the iperf3-server-b container running in the
-**public1** cluster and run the iperf3 client benchmark against each server.
-3. In the terminal for the **public2** cluster, attach to the iperf3-server-c container running in the
-**public2** cluster and run the iperf3 client benchmark against each server.
+After deploying the iperf3 servers into the private and public cloud clusters,
+the virtual application network enables communications even though they are 
+running in separate clusters.
 
 _**Console for private1:**_
 
