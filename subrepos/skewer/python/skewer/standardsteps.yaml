@@ -1,0 +1,147 @@
+
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+install_the_skupper_command_line_tool:
+  title: Install the Skupper command-line tool
+  preamble: |
+    The `skupper` command-line tool is the entrypoint for installing
+    and configuring Skupper.  You need to install the `skupper`
+    command only once for each development environment.
+    On Linux or Mac, you can use the install script (inspect it
+    [here][install-script]) to download and extract the command:
+    ~~~ shell
+    curl https://skupper.io/install.sh | sh
+    ~~~
+    The script installs the command under your home directory.  It
+    prompts you to add the command to your path if necessary.
+    For Windows and other installation options, see [Installing
+    Skupper][install-docs].
+    [install-script]: https://github.com/skupperproject/skupper-website/blob/main/docs/install.sh
+    [install-docs]: https://skupper.io/install/index.html
+configure_separate_console_sessions:
+  title: Configure separate console sessions
+  preamble: |
+    Skupper is designed for use with multiple namespaces, usually on
+    different clusters.  The `skupper` command uses your
+    [kubeconfig][kubeconfig] and current context to select the
+    namespace where it operates.
+    [kubeconfig]: https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/
+    Your kubeconfig is stored in a file in your home directory.  The
+    `skupper` and `kubectl` commands use the `KUBECONFIG` environment
+    variable to locate it.
+    A single kubeconfig supports only one active context per user.
+    Since you will be using multiple contexts at once in this
+    exercise, you need to create distinct kubeconfigs.
+    Start a console session for each of your namespaces.  Set the
+    `KUBECONFIG` environment variable to a different path in each
+    session.
+  commands:
+    "*":
+      - run: export KUBECONFIG=@kubeconfig@
+access_your_clusters:
+  title: Access your clusters
+  preamble: |
+    The procedure for accessing a Kubernetes cluster varies by
+    provider. [Find the instructions for your chosen
+    provider][kube-providers] and use them to authenticate and
+    configure access for each console session.
+    [kube-providers]: https://skupper.io/start/kubernetes.html
+set_up_your_namespaces:
+  title: Set up your namespaces
+  preamble: |
+    Use `kubectl create namespace` to create the namespaces you wish
+    to use (or use existing namespaces).  Use `kubectl config
+    set-context` to set the current namespace for each session.
+  commands:
+    "*":
+      - run: kubectl create namespace @namespace@
+      - run: kubectl config set-context --current --namespace @namespace@
+install_skupper_in_your_namespaces:
+  title: Install Skupper in your namespaces
+  preamble: |
+    The `skupper init` command installs the Skupper router and service
+    controller in the current namespace.  Run the `skupper init` command
+    in each namespace.
+    **Note:** If you are using Minikube, [you need to start `minikube
+    tunnel`][minikube-tunnel] before you install Skupper.
+    [minikube-tunnel]: https://skupper.io/start/minikube.html#running-minikube-tunnel
+  commands:
+    "*":
+      - run: skupper init --site-name @namespace@
+  postamble: |
+    _Sample output:_
+    ~~~ console
+    $ skupper init --site-name <namespace>
+    Waiting for LoadBalancer IP or hostname...
+    Skupper is now installed in namespace '<namespace>'.  Use 'skupper status' to get more information.
+    ~~~
+check_the_status_of_your_namespaces:
+  title: Check the status of your namespaces
+  preamble: |
+    Use `skupper status` in each console to check that Skupper is
+    installed.
+  commands:
+    "*":
+      - await: [deployment/skupper-service-controller, deployment/skupper-router]
+      - run: skupper status
+  postamble: |
+    _Sample output:_
+    ~~~ console
+    Skupper is enabled for namespace "<namespace>" in interior mode. It is connected to 1 other site. It has 1 exposed service.
+    The site console url is: <console-url>
+    The credentials for internal console-auth mode are held in secret: 'skupper-console-users'
+    ~~~
+    As you move through the steps below, you can use `skupper status` at
+    any time to check your progress.
+accessing_the_web_console:
+  title: Accessing the web console
+  numbered: false
+  preamble: |
+    Skupper includes a web console you can use to view the application
+    network.  To access it, use `skupper status` to look up the URL of
+    the web console.  Then use `kubectl get
+    secret/skupper-console-users` to look up the console admin
+    password.
+    **Note:** The `<console-url>` and `<password>` fields in the
+    following output are placeholders.  The actual values are specific
+    to your environment.
+  commands:
+    "0":
+      - run: skupper status
+        apply: readme
+        output: |
+          Skupper is enabled for namespace "@namespace@" in interior mode. It is connected to 1 other site. It has 1 exposed service.
+          The site console url is: <console-url>
+          The credentials for internal console-auth mode are held in secret: 'skupper-console-users'
+      - run: kubectl get secret/skupper-console-users -o jsonpath={.data.admin} | base64 -d
+        apply: readme
+        output: <password>
+      - await_external_ip: service/skupper
+  postamble: |
+    Navigate to `<console-url>` in your browser.  When prompted, log
+    in as user `admin` and enter the password.
+cleaning_up:
+  id: cleaning_up
+  title: Cleaning up
+  numbered: false
+  preamble: |
+    Restore your cluster environment by returning the resources created in the demonstration and delete the skupper network
+  commands:
+    "*":
+      - run: skupper delete
