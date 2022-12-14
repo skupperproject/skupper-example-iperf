@@ -36,9 +36,6 @@ jobs:
           minikube version: "v1.25.2"
           kubernetes version: "v1.24.1"
           github token: ${{secrets.GITHUB_TOKEN}}
-      - run: pip install iperf3
       - run: curl https://skupper.io/install.sh | sh
-      - run: mkdir tmp
       - run: echo "$HOME/.local/bin" >> $GITHUB_PATH
       - run: ./plano test --debug
-      - run: rm -rf tmp/
