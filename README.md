@@ -139,8 +139,8 @@ kubectl config set-context --current --namespace private1
 ## Step 5: Install Skupper in your namespaces
 
 The `skupper init` command installs the Skupper router and service
-controller in the current namespace.  Run the `skupper init` command
-in each namespace.
+controller in the current namespace. It can also install the optional
+skupper web console. Run the `skupper init` command in each namespace.
 **Note:** If you are using Minikube, [you need to start `minikube
 tunnel`][minikube-tunnel] before you install Skupper.
 [minikube-tunnel]: https://skupper.io/start/minikube.html#running-minikube-tunnel
@@ -148,24 +148,24 @@ tunnel`][minikube-tunnel] before you install Skupper.
 _**Console for public1:**_
 
 ~~~ shell
-skupper init --site-name public1
+skupper init --enable-console --enable-flow-collector --site-name public1
 ~~~
 
 _**Console for public2:**_
 
 ~~~ shell
-skupper init --site-name public2
+skupper init --enable-console --enable-flow-collector --site-name public2
 ~~~
 
 _**Console for private1:**_
 
 ~~~ shell
-skupper init --site-name private1
+skupper init --enable-console --enable-flow-collector --site-name private1
 ~~~
 
 _Sample output:_
 ~~~ console
-$ skupper init --site-name <namespace>
+$ skupper init --enable-console --enable-flow-collector --site-name <namespace>
 Waiting for LoadBalancer IP or hostname...
 Skupper is now installed in namespace '<namespace>'.  Use 'skupper status' to get more information.
 ~~~
