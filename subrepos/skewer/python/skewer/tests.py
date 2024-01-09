@@ -24,7 +24,7 @@ def check_environment_():
     check_environment()
 
 @test
-def planofile():
+def plano_():
     with working_dir("test-example"):
         run("./plano")
         run("./plano generate")
@@ -40,30 +40,32 @@ def generate_readme_():
         check_file("README.md")
 
 @test
-def await_resource_():
+def await_operations():
     try:
         run("minikube -p skewer start")
 
         with expect_error():
-            await_resource("deployment", "not-there", timeout=1)
+            await_resource("deployment/not-there", timeout=1)
 
         with expect_error():
-            await_external_ip("service", "not-there", timeout=1)
+            await_external_ip("service/not-there", timeout=1)
     finally:
         run("minikube -p skewer delete")
 
-@test(timeout=600)
-def run_steps_():
+@test
+def run_steps_demo():
     with working_dir("test-example"):
         with working_env(SKEWER_DEMO=1, SKEWER_DEMO_NO_WAIT=1):
             run_steps_minikube("skewer.yaml", debug=True)
 
+@test
+def run_steps_debug():
+    with working_dir("test-example"):
         with expect_error():
             with working_env(SKEWER_FAIL=1):
                 run_steps_minikube("skewer.yaml", debug=True)
 
 if __name__ == "__main__":
-    from plano.commands import PlanoTestCommand
-    from . import tests
+    import sys
 
-    PlanoTestCommand(tests).main()
+    PlanoTestCommand(sys.modules[__name__]).main()

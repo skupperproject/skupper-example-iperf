@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,14 +17,8 @@
 # under the License.
 #
 
-import os
-import sys
+from .main import *
+from .main import _default_sigterm_handler
 
-if os.path.islink(__file__):
-    repo_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    sys.path.insert(0, os.path.join(repo_dir, "src"))
-
-from plano.commands import PlanoShellCommand
-
-if __name__ == "__main__":
-    PlanoShellCommand().main()
+from .command import *
+from .test import *

@@ -21,32 +21,29 @@ use the [Skupper example template][template] as a starting point.
 
 [template]: https://github.com/skupperproject/skupper-example-template
 
-Make sure you have git-subrepo installed:
+Add the Skewer code as a subdirectory in your example project:
 
-    dnf install git-subrepo
-
-Add the Skewer code as a subrepo in your example project:
-
-    cd project-dir/
-    git subrepo clone https://github.com/skupperproject/skewer subrepos/skewer
+    cd <project-dir>/
+    mkdir external
+    curl -sfL https://github.com/skupperproject/skewer/archive/main.tar.gz | tar -C external -xz
 
 Symlink the Skewer library into your `python` directory:
 
     mkdir -p python
-    ln -s ../subrepos/skewer/python/skewer python/skewer
+    ln -s ../external/skewer-main/python/skewer python/skewer
 
 Symlink the `plano` command into the root of your project.  Symlink
-the standard `config/.planofile` as `.planofile` in the root as well:
+the standard `config/.plano.py` as `.plano.py` in the root as well:
 
-    ln -s subrepos/skewer/plano
-    ln -s subrepos/skewer/config/.planofile
+    ln -s external/skewer-main/plano
+    ln -s external/skewer-main/config/.plano.py
 
 <!-- This sucks.  GitHub Actions doesn't support workflow files as symlinks. -->
 
 <!-- Symlink the standard GitHub Actions workflow file: -->
 
 <!--     mkdir -p .github/workflows -->
-<!--     ln -s ../../subrepos/skewer/config/.github/workflows/main.yaml .github/workflows/main.yaml -->
+<!--     ln -s ../../external/skewer-main/config/.github/workflows/main.yaml .github/workflows/main.yaml -->
 
 <!-- So I have a convenience for copying the latest version into place. -->
 
@@ -79,10 +76,10 @@ options:
   --quiet               Print no logging to the console
   --debug               Print debugging output to the console
   -h, --help            Show this help message and exit
-  -f FILE, --file FILE  Load commands from FILE (default 'Planofile' or '.planofile')
+  -f FILE, --file FILE  Load commands from FILE (default '.plano.py')
 
 commands:
-  {generate,render,run,run-external,demo,test,update-workflow}
+  {generate,render,run,run-external,demo,test,update-workflow,update-skewer}
     generate            Generate README.md from the data in skewer.yaml
     render              Render README.html from the data in skewer.yaml
     run                 Run the example steps using Minikube
@@ -90,6 +87,7 @@ commands:
     demo                Run the example steps and pause before cleaning up
     test                Test README generation and run the steps on Minikube
     update-workflow     Update the GitHub Actions workflow file
+    update-skewer       Update the embedded Skewer repo
 ~~~
 
 ## Updating a Skewer subrepo inside your example project
@@ -97,15 +95,6 @@ commands:
 Use `git subrepo pull`:
 
     git subrepo pull --force subrepos/skewer
-
-Some older versions of git-subrepo won't complete a force pull.  If
-that happens, you can simply blow away your changes and get the latest
-Skewer, using these commands:
-
-    git subrepo clean subrepos/skewer
-    git rm -rf subrepos/skewer/
-    git commit -am "Temporarily remove the previous version of Skewer"
-    git subrepo clone https://github.com/skupperproject/skewer subrepos/skewer
 
 ## Skewer YAML
 
@@ -127,23 +116,34 @@ A **site**:
 
 ~~~ yaml
 <site-name>:
-  kubeconfig: <kubeconfig-file>  # (required)
-  namespace: <namespace-name>    # (required)
+  title:            # The site title (optional)
+  platform:         # "kubernetes" or "podman" (required)
+  namespace:        # The Kubernetes namespace (required for Kubernetes sites)
+  env:              # A map of named environment variables
 ~~~
 
 A tilde (~) in the kubeconfig file path is replaced with a temporary
 working directory during testing.
+
+Kubernetes sites must have a `KUBECONFIG` environment variable with a
+path to a kubeconfig file.  Podman sites must have a
+`SKUPPER_PLATFORM` variable with the value `podman`.
 
 Example sites:
 
 ~~~ yaml
 sites:
   east:
-    kubeconfig: ~/.kube/config-east
+    title: East
+    platform: kubernetes
     namespace: east
+    env:
+      KUBECONFIG: ~/.kube/config-east
   west:
-    kubeconfig: ~/.kube/config-west
-    namespace: west
+    title: West
+    platform: podman
+    env:
+      SKUPPER_PLATFORM: podman
 ~~~
 
 A **step**:
@@ -241,12 +241,15 @@ The `apply` field is useful when you want the readme instructions to
 be different from the test procedure, or you simply want to omit
 something.
 
-There is also a special `await` command you can use to pause for a
-condition you require before going to the next step.  It is used only
-for testing and does not impact the README.
+There are also some special "await" commands that you can use to pause
+for a condition you require before going to the next step.  They are
+used only for testing and do not impact the README.
 
 ~~~ yaml
-- await:            # A resource or list of resources for which to await readiness (optional)
+- await_resource:     # A resource (as in, deployment/frontend) for which to await readiness (optional)
+- await_external_ip:  # A service (as in, service/frontend) for which to await an external IP (optional)
+- await_http_ok:      # A service and URL template (as in, service/frontend and "http://{}:8080/api/hello")
+                      # for which to await an HTTP OK response (optional)
 ~~~
 
 Example commands:
@@ -258,7 +261,7 @@ commands:
       output: |
         service/frontend exposed
   west:
-    - await: service/backend
+    - await_resource: service/backend
     - run: kubectl get service/backend
       output: |
         NAME          TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)         AGE
