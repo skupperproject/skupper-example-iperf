@@ -68,10 +68,11 @@ steps:
       Before we can test performance, we need access to the `iperf3` from each namespace.
     commands:
       "private1":
-        - await: deployment/iperf3-server-a
+        - await_resource: deployment/iperf3-server-a
         - run: skupper expose deployment/iperf3-server-a --port 5201
-        - await: service/iperf3-server-a
+        - await_resource: service/iperf3-server-a
         - run: skupper service status
+        - await_external_ip: service/iperf3-server-a
           apply: test
       "public1":
         - await: deployment/iperf3-server-b
