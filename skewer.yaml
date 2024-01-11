@@ -72,18 +72,17 @@ steps:
         - run: skupper expose deployment/iperf3-server-a --port 5201
         - await_resource: service/iperf3-server-a
         - run: skupper service status
-        - await_external_ip: service/iperf3-server-a
           apply: test
       "public1":
-        - await: deployment/iperf3-server-b
+        - await_resource: deployment/iperf3-server-b
         - run: skupper expose deployment/iperf3-server-b --port 5201
-        - await: service/iperf3-server-b
+        - await_resource: service/iperf3-server-b
         - run: skupper service status
           apply: test
       "public2":
-        - await: deployment/iperf3-server-c
+        - await_resource: deployment/iperf3-server-c
         - run: skupper expose deployment/iperf3-server-c --port 5201
-        - await: service/iperf3-server-c
+        - await_resource: service/iperf3-server-c
         - run: skupper service status
           apply: test
   - title: Run benchmark tests across the clusters

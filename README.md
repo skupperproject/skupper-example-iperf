@@ -296,7 +296,6 @@ _**Console for private1:**_
 
 ~~~ shell
 skupper expose deployment/iperf3-server-a --port 5201
-skupper service status
 ~~~
 
 _**Console for public1:**_
