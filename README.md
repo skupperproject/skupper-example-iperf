@@ -54,31 +54,40 @@ As an example, the three clusters might consist of:
 The `skupper` command-line tool is the entrypoint for installing
 and configuring Skupper.  You need to install the `skupper`
 command only once for each development environment.
+
 On Linux or Mac, you can use the install script (inspect it
 [here][install-script]) to download and extract the command:
+
 ~~~ shell
 curl https://skupper.io/install.sh | sh
 ~~~
+
 The script installs the command under your home directory.  It
 prompts you to add the command to your path if necessary.
+
 For Windows and other installation options, see [Installing
 Skupper][install-docs].
+
 [install-script]: https://github.com/skupperproject/skupper-website/blob/main/docs/install.sh
 [install-docs]: https://skupper.io/install/index.html
 
 ## Step 2: Configure separate console sessions
 
 Skupper is designed for use with multiple namespaces, usually on
-different clusters.  The `skupper` command uses your
+different clusters.  The `skupper` and `kubectl` commands use your
 [kubeconfig][kubeconfig] and current context to select the
-namespace where it operates.
+namespace where they operate.
+
 [kubeconfig]: https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/
+
 Your kubeconfig is stored in a file in your home directory.  The
 `skupper` and `kubectl` commands use the `KUBECONFIG` environment
 variable to locate it.
+
 A single kubeconfig supports only one active context per user.
 Since you will be using multiple contexts at once in this
 exercise, you need to create distinct kubeconfigs.
+
 Start a console session for each of your namespaces.  Set the
 `KUBECONFIG` environment variable to a different path in each
 session.
@@ -107,6 +116,7 @@ The procedure for accessing a Kubernetes cluster varies by
 provider. [Find the instructions for your chosen
 provider][kube-providers] and use them to authenticate and
 configure access for each console session.
+
 [kube-providers]: https://skupper.io/start/kubernetes.html
 
 ## Step 4: Set up your namespaces
@@ -138,35 +148,39 @@ kubectl config set-context --current --namespace private1
 
 ## Step 5: Install Skupper in your namespaces
 
-The `skupper init` command installs the Skupper router and service
+The `skupper init` command installs the Skupper router and
 controller in the current namespace.  Run the `skupper init` command
 in each namespace.
+
 **Note:** If you are using Minikube, [you need to start `minikube
 tunnel`][minikube-tunnel] before you install Skupper.
+
 [minikube-tunnel]: https://skupper.io/start/minikube.html#running-minikube-tunnel
 
 _**Console for public1:**_
 
 ~~~ shell
-skupper init --site-name public1
+skupper init --enable-console --enable-flow-collector
 ~~~
 
 _**Console for public2:**_
 
 ~~~ shell
-skupper init --site-name public2
+skupper init
 ~~~
 
 _**Console for private1:**_
 
 ~~~ shell
-skupper init --site-name private1
+skupper init
 ~~~
 
 _Sample output:_
+
 ~~~ console
-$ skupper init --site-name <namespace>
+$ skupper init
 Waiting for LoadBalancer IP or hostname...
+Waiting for status...
 Skupper is now installed in namespace '<namespace>'.  Use 'skupper status' to get more information.
 ~~~
 
@@ -194,11 +208,13 @@ skupper status
 ~~~
 
 _Sample output:_
+
 ~~~ console
 Skupper is enabled for namespace "<namespace>" in interior mode. It is connected to 1 other site. It has 1 exposed service.
 The site console url is: <console-url>
 The credentials for internal console-auth mode are held in secret: 'skupper-console-users'
 ~~~
+
 As you move through the steps below, you can use `skupper status` at
 any time to check your progress.
 
@@ -206,18 +222,20 @@ any time to check your progress.
 
 Creating a link requires use of two `skupper` commands in
 conjunction, `skupper token create` and `skupper link create`.
+
 The `skupper token create` command generates a secret token that
 signifies permission to create a link.  The token also carries the
 link details.  Then, in a remote namespace, The `skupper link
 create` command uses the token to create a link to the namespace
 that generated it.
+
 **Note:** The link token is truly a *secret*.  Anyone who has the
 token can link to your namespace.  Make sure that only those you
 trust have access to it.
+
 First, use `skupper token create` in one namespace to generate the
 token.  Then, use `skupper link create` in the other to create a
 link.
-Continue this pattern until all namespaces are linked.
 
 _**Console for public1:**_
 
@@ -241,6 +259,11 @@ skupper link create ~/private1-to-public1-token.yaml
 skupper link create ~/private1-to-public2-token.yaml
 skupper link status --wait 60
 ~~~
+
+If your console sessions are on different machines, you may need
+to use `scp` or a similar tool to transfer the token securely.  By
+default, tokens expire after a single use or 15 minutes after
+creation.
 
 ## Step 8: Deploy the iperf3 servers
 
@@ -324,6 +347,7 @@ network.  To access it, use `skupper status` to look up the URL of
 the web console.  Then use `kubectl get
 secret/skupper-console-users` to look up the console admin
 password.
+
 **Note:** The `<console-url>` and `<password>` fields in the
 following output are placeholders.  The actual values are specific
 to your environment.
@@ -339,7 +363,7 @@ _Sample output:_
 
 ~~~ console
 $ skupper status
-Skupper is enabled for namespace "public1" in interior mode. It is connected to 1 other site. It has 1 exposed service.
+Skupper is enabled for namespace "public1". It is connected to 1 other site. It has 1 exposed service.
 The site console url is: <console-url>
 The credentials for internal console-auth mode are held in secret: 'skupper-console-users'
 
@@ -352,7 +376,8 @@ in as user `admin` and enter the password.
 
 ## Cleaning up
 
-Restore your cluster environment by returning the resources created in the demonstration and delete the skupper network
+To remove Skupper and the other resources from this exercise, use
+the following commands.
 
 _**Console for private1:**_
 
